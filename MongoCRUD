@@ -1,0 +1,233 @@
+public class MongoDB_CRUD{
+	
+		public static void main(String args[]) 
+		{
+			MongoDB_CRUD obj = new MongoDB_CRUD();
+			MongoIterable<String> dbCollections = obj.CollectionList();
+			for(String collection:dbCollections)
+			{
+				System.out.println(collection);
+			}
+			
+			Document firstDocument = obj.ReturnDocument();
+			System.out.println(firstDocument);
+				
+			
+		}
+	
+	private MongoClient mongo = null;
+	public static String ticketCollection = "Ticket_Collection";
+	public static String ticketsDatabase = "TroubleTickets";
+	/*
+	 * Function - MongoDbTest constructor
+	 * 
+	 * purpose - sets up connection to database, updates connection object
+	 * 
+	 * parameters - none 
+	 */
+	
+	
+	public MongoDB_CRUD() {
+		
+		try {
+			
+				ConnectionString connection = new ConnectionString("mongodb://");
+				MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connection).retryWrites(true).build();
+				MongoClient mongo = MongoClients.create(settings);
+				System.out.println("Connected to the database successfully");
+				this.mongo = mongo;
+			
+		}catch(Exception e)
+		{
+			System.out.println(e);
+		}
+		
+		
+	}
+	
+	
+	/*
+	 * Function - CollectionList
+	 * 
+	 * purpose - to return a collectionList inside the TroubleTickets Database
+	 * 
+	 * parameters - none 
+	 */
+	public MongoIterable<String> CollectionList()
+	{
+		
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoIterable<String> collectionList = database.listCollectionNames();
+		
+		
+		
+		return collectionList;
+		
+		
+	}
+	
+	
+	/*
+	 * Function - ReturnDocument 
+	 * 
+	 * purpose - Returns the first Document in the troubleTicketsData collection
+	 * 
+	 * parameters - none 
+	 */
+	public Document ReturnDocument()
+	{
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoCollection<Document> collection = database.getCollection("");
+		Document document = collection.find().first();
+		
+		
+		return document;
+		
+	}
+	
+	
+	/*
+	 * Function Find Document - type FindIterable Document
+	 * 
+	 * purpose - returns a document that is iterable to retrieve all values from string keys
+	 * 
+	 * 
+	 * parameters - String x that is the NSEP Ticket # 
+	 */
+	public FindIterable<Document> FindDocument(String x)
+	{
+		
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoCollection<Document> collection = database.getCollection("");
+		FindIterable<Document> results = collection.find(new BasicDBObject("",x));
+		
+		
+		return results;
+	}
+	
+	
+	
+	/*
+	 * Function - FindDocument_Check
+	 * 
+	 * 
+	 * purpose - does a sanity check when deleting a Document/Ticket
+	 * 			 returns a boolean on whether or not document was deleted
+	 * 
+	 * parameters - String x which is a NSED ID of a existing/extinct ticket
+	 */
+	public Boolean FindDocument_Check(String x)
+	{
+		Boolean flag = false;
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoCollection<Document> collection = database.getCollection("");
+		BasicDBObject whereQuery = new BasicDBObject();
+		whereQuery.put("", x);
+		FindIterable<Document> document = collection.find(whereQuery);
+		
+		if(document != null)
+		{
+			flag = true;
+			System.out.println("Document exists");
+		}
+		else {
+			flag = false;
+			System.out.println("Document does not exist");
+
+		}
+		
+		return flag;
+	}
+	
+
+
+	/*
+	 * Function - DeleteEveryDocument
+	 * 
+	 * purpose - can delete every document in a given collection
+	 * 
+	 * params - none, but can take in a Database/Collection names as variables
+	 */
+	public void DeleteEveryDocument()
+	{
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoCollection<Document> collection = database.getCollection("");
+		BasicDBObject document = new BasicDBObject();		
+		collection.deleteMany(document);
+	}
+	
+	
+	/*
+	 * Function - DeleteQueryDocument 
+	 * 
+	 * purpose - find a document in the collection with the
+	 * 			 id matching the the String x variable then
+	 * 			 delete that document, then run a loop for
+	 * 			 sanity checking and return true/false on deletion status 
+	 * 
+	 * parameters - 
+	 */
+	
+	public Boolean DeleteQueryDocument(String x)
+	{
+		
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoCollection<Document> collection = database.getCollection("");
+		BasicDBObject theQuery = new BasicDBObject();
+		theQuery.put("", x);
+		DeleteResult deletedResult = collection.deleteOne(theQuery);
+		System.out.println(deletedResult);
+		String y = x;
+		Boolean flag = FindDocument_Check(y);
+		
+		if(flag == false)
+		{
+			System.out.println("Ticket was not delete successfully");
+		}
+		else {
+			System.out.println("Ticket Deletion Confirmed!");
+		}
+		
+		
+		
+		return flag;
+	}
+	
+	
+	/*
+	 * Function - InsertDocument
+	 * 
+	 * purpose - inserts a document with list index data 
+	 * 
+	 * parameters - List<String>
+	 */
+	public void InsertDocument(List<String> x)
+	{
+		
+		MongoClient mongo = this.mongo;
+		MongoDatabase database = mongo.getDatabase("");
+		MongoCollection<Document> collection = database.getCollection("");
+		
+		Document document = new Document("", x.get(0))
+				.append("", x.get(1))
+				.append("", x.get(2))
+				.append("", x.get(3))
+				.append("", x.get(4))
+				.append("",x.get(5))
+				.append("", x.get(6))
+				.append("", x.get(7))
+				.append("", x.get(8));
+		
+		
+		collection.insertOne(document);
+		
+//		System.out.println(x.get(0));
+	}
+
+}
